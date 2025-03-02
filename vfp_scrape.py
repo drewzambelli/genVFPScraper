@@ -4,7 +4,8 @@ import time
 import json
 import csv
 
-BASE_URL = "https://www.tek-tips.com/forums/microsoft-foxpro.184/"
+# Start from page 502
+BASE_URL = "https://www.tek-tips.com/forums/microsoft-foxpro.184/page-1001"
 
 # Function to fetch and parse a page
 def fetch_page(url):
@@ -12,12 +13,12 @@ def fetch_page(url):
     response.raise_for_status()  # Check if the request was successful
     return BeautifulSoup(response.content, 'html.parser')
 
-def extract_threads(main_page_url, max_pages = 3): #added max_pages for testing purposes
+def extract_threads(main_page_url, start_page=1001, end_page=1469):
     threads_data = []
     current_page_url = main_page_url
-    page_count = 0 #for testing purposes
+    page_count = start_page  # Start from page 502
 
-    while current_page_url and page_count < max_pages: #adding the < for testing pruposes
+    while current_page_url and page_count <= end_page:
         soup = fetch_page(current_page_url)
         
         # Find all thread containers
@@ -59,7 +60,7 @@ def extract_threads(main_page_url, max_pages = 3): #added max_pages for testing 
 
         time.sleep(1)  # To avoid making too many requests quickly
 
-        page_count += 1 #for  testing purposes
+        page_count += 1
         
     return threads_data
 
@@ -139,12 +140,12 @@ def export_to_csv(threads_data, filename="threads_data.csv"):
 
 # Main function to execute the scraper
 def main():
-    print("Scraping the main page for threads...")
-    threads = extract_threads(BASE_URL)
+    print("Scraping the main page for threads from page 1001 to 1469...")
+    threads = extract_threads(BASE_URL, start_page=1001, end_page=1469)
     
     threads_data = []
     
-    for thread in threads[:]:
+    for thread in threads:
         thread_data = {
             'title': thread['title'],
             'author': thread['author'],
@@ -172,16 +173,13 @@ def main():
 if __name__ == "__main__":
     main()
 
-
-
 # import requests
 # from bs4 import BeautifulSoup
 # import time
 # import json
 # import csv
 
-# # Base URL of the Tek-Tips FoxPro forum
-# BASE_URL = "https://www.tek-tips.com/forums/microsoft-foxpro.184/"
+# BASE_URL = "https://www.tek-tips.com/forums/microsoft-foxpro.184/page-502"
 
 # # Function to fetch and parse a page
 # def fetch_page(url):
@@ -189,41 +187,56 @@ if __name__ == "__main__":
 #     response.raise_for_status()  # Check if the request was successful
 #     return BeautifulSoup(response.content, 'html.parser')
 
-# def extract_threads(main_page_url):
-#     soup = fetch_page(main_page_url)
-    
-#     # Find all thread containers
-#     thread_containers = soup.find_all('div', class_='structItem-cell structItem-cell--main')
-    
-#     thread_details = []
-    
-#     for thread_container in thread_containers:
-#         # Extract title
-#         title_tag = thread_container.find('div', class_='structItem-title').find('a')
-#         if not title_tag:
-#             continue  # Skip if title not found
+# def extract_threads(main_page_url, start_page= 502, max_pages = 1000): #added max_pages for testing purposes
+#     threads_data = []
+#     current_page_url = main_page_url
+#     page_count = 0 #for testing purposes
+
+#     while current_page_url and page_count <= max_pages: #adding the < for testing pruposes
+#         soup = fetch_page(current_page_url)
         
-#         title = title_tag.get_text(strip=True)
-#         link = "https://www.tek-tips.com" + title_tag['href']
+#         # Find all thread containers
+#         thread_containers = soup.find_all('div', class_='structItem-cell structItem-cell--main')
+        
+#         for thread_container in thread_containers:
+#             # Extract title
+#             title_tag = thread_container.find('div', class_='structItem-title').find('a')
+#             if not title_tag:
+#                 continue  # Skip if title not found
+            
+#             title = title_tag.get_text(strip=True)
+#             link = "https://www.tek-tips.com" + title_tag['href']
+    
+#             # Extract author
+#             minor_section = thread_container.find('div', class_='structItem-minor')
+#             author_tag = minor_section.find('a', class_='username') if minor_section else None
+#             author = author_tag.get_text(strip=True) if author_tag else "Unknown"
+    
+#             # Extract timestamp
+#             time_tag = minor_section.find('time') if minor_section else None
+#             timestamp = time_tag['title'] if time_tag else "No timestamp"
+    
+#             # Store the thread details
+#             threads_data.append({
+#                 'title': title,
+#                 'author': author,
+#                 'timestamp': timestamp,
+#                 'link': link
+#             })
+        
+#         # Find the "Next" button and get the URL for the next page
+#         next_button = soup.find('a', class_='pageNav-jump pageNav-jump--next')
+#         if next_button:
+#             current_page_url = "https://www.tek-tips.com" + next_button['href']
+#             print(f"Moving to next page: {current_page_url}")
+#         else:
+#             current_page_url = None  # No "Next" button means we reached the last page
 
-#         # Extract author
-#         minor_section = thread_container.find('div', class_='structItem-minor')
-#         author_tag = minor_section.find('a', class_='username') if minor_section else None
-#         author = author_tag.get_text(strip=True) if author_tag else "Unknown"
+#         time.sleep(1)  # To avoid making too many requests quickly
 
-#         # Extract timestamp
-#         time_tag = minor_section.find('time') if minor_section else None
-#         timestamp = time_tag['title'] if time_tag else "No timestamp"
-
-#         # Store the thread details
-#         thread_details.append({
-#             'title': title,
-#             'author': author,
-#             'timestamp': timestamp,
-#             'link': link
-#         })
-
-#     return thread_details
+#         page_count += 1 #for  testing purposes
+        
+#     return threads_data
 
 # # Function to scrape replies for a thread
 # def scrape_replies(thread_url):
@@ -244,15 +257,12 @@ if __name__ == "__main__":
 
 #         # Extract timestamp: Date from data-date-string, Time from title
 #         time_tag = reply.find('time', class_='u-dt')
-#         print('TIMETAG: ', time_tag)
 #         if time_tag and 'data-date-string' in time_tag.attrs and 'title' in time_tag.attrs:
 #             date = time_tag['data-date-string']
 #             time = time_tag['title']
 #             timestamp = f"{date} at {time}"
 #         else:
 #             timestamp = "No timestamp"
-
-#         print('TIMESTAMPJ: ', timestamp)
 
 #         # Determine if it's the first post (question) or a reply
 #         post_type = "Question" if index == 0 else "Reply"
@@ -309,7 +319,7 @@ if __name__ == "__main__":
     
 #     threads_data = []
     
-#     for thread in threads[:5]:  # Limiting to 5 threads for testing
+#     for thread in threads[:]:
 #         thread_data = {
 #             'title': thread['title'],
 #             'author': thread['author'],

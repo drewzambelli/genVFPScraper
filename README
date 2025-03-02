@@ -1,0 +1,10 @@
+Tek-tips scraper targetting foxpro forum threads
+When run, see line 16 and line 144 to change pages it pulls - ie changed start_page and end_page
+to pages where you want to start and end.
+Also, see line 8 BASE_URL variable - change page number to where you want to start.
+Then just run as normal python program from terminal: 'python vfp_scrap.py'
+Currently, scraped up to page 1469.
+Files stored off into CSV and JSON.
+Keep in mind, no failure handling written into code so if request times out, website crashes,
+or internet fails - the program fails and you lose everything you've scraped (writing only
+occurs at very end). I suggest you scrape a couple hundred pages at a time.
